@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#641b35">
+<title>Control de acceso | Flor Normalista 2026</title>
+<style>
+:root{--wine:#641b35;--wine2:#84294a;--gold:#d8b66a;--bg:#f7f4f2;--card:#fff;--text:#21191c;--muted:#756970;--line:#e6dfe2;--green:#147a48;--greenbg:#e8f7ee;--red:#a52b37;--redbg:#fff0f0;--amber:#875900;--amberbg:#fff5d9}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}main{width:min(760px,100%);margin:auto;padding:20px 16px 40px}.hero{text-align:center;padding:16px 8px 20px}.eyebrow{font-size:.78rem;font-weight:800;letter-spacing:.16em;color:var(--wine)}h1{font-size:clamp(1.55rem,5vw,2.2rem);line-height:1.12;margin:8px 0}.subtitle{color:var(--muted);margin:8px 0 0}.panel{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;margin-bottom:14px;box-shadow:0 4px 18px #35132108}.label{display:block;font-weight:750;margin-bottom:8px}.searchrow{display:flex;gap:9px}.searchrow input{min-width:0;flex:1;font-size:1.5rem;font-weight:750;letter-spacing:.03em;padding:13px 14px;border:1px solid #cfc2c8;border-radius:12px;background:white;color:var(--text)}button{border:0;border-radius:12px;min-height:46px;padding:11px 16px;font:inherit;font-weight:750;cursor:pointer}button:focus-visible,input:focus-visible{outline:3px solid #d8b66a;outline-offset:2px}.primary{background:var(--wine);color:white}.primary:hover{background:var(--wine2)}.secondary{background:#f1e9ed;color:var(--wine);border:1px solid #e1cfd6}.danger{background:#fff0f0;color:#962733;border:1px solid #efc9ce}.result{margin-top:18px;padding:22px 14px;text-align:center;border-radius:15px;border:1px solid var(--line);background:#fbf9fa;min-height:145px;display:flex;flex-direction:column;align-items:center;justify-content:center}.result .number{font-size:2.8rem;line-height:1.15;font-weight:900;overflow-wrap:anywhere}.result .status{font-size:1.1rem;font-weight:850;margin-top:7px}.result .detail{color:var(--muted);font-size:.9rem;margin-top:6px}.available{background:var(--greenbg);border-color:#b8e5c9;color:var(--green)}.used{background:var(--redbg);border-color:#f0c4c9;color:var(--red)}.pending{background:var(--amberbg);border-color:#ecd79a;color:var(--amber)}.result button{width:100%;max-width:340px;margin-top:17px}.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px}.stat{padding:17px 12px;text-align:center}.stat strong{display:block;font-size:2rem;line-height:1.2}.stat span{font-size:.88rem;color:var(--muted)}.section-title{font-size:1.05rem;margin:0 0 12px}.actions{display:flex;flex-wrap:wrap;gap:9px}.actions button{flex:1 1 150px}.recent{display:flex;flex-direction:column;gap:8px}.recent-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;background:#fbf9fa;border:1px solid var(--line);border-radius:10px}.recent-row strong{font-variant-numeric:tabular-nums}.pill{font-size:.75rem;font-weight:800;border-radius:999px;padding:5px 9px;background:var(--greenbg);color:var(--green)}.muted{color:var(--muted);font-size:.88rem}.notice{font-size:.85rem;color:var(--muted);line-height:1.5}.hidden{display:none!important}.footer{text-align:center;color:var(--muted);font-size:.78rem;padding:8px}.toast{margin-top:10px;font-size:.9rem;font-weight:650;color:var(--wine)}@media(max-width:430px){main{padding:12px 11px 28px}.panel{padding:16px}.searchrow{flex-direction:column}.searchrow button{width:100%}.result .number{font-size:2.4rem}.stats{gap:9px}}
+</style>
+</head>
+<body>
+<main>
+  <header class="hero">
+    <div class="eyebrow">FLOR NORMALISTA 2026</div>
+    <h1>Control de Acceso</h1>
+    <p class="subtitle">Imposición de Bandas</p>
+  </header>
+
+  <section class="panel">
+    <form id="searchForm">
+      <label class="label" for="folioInput">Ingresa el número de folio</label>
+      <div class="searchrow">
+        <input id="folioInput" type="text" inputmode="numeric" autocomplete="off" placeholder="Ej. 100" aria-describedby="inputHelp" required>
+        <button class="primary" type="submit">Buscar folio</button>
+      </div>
+      <div id="inputHelp" class="muted" style="margin-top:7px">Escribe el número que aparece en el boleto.</div>
+    </form>
+    <div id="result" class="result" aria-live="polite">
+      <div class="detail">El estado del folio aparecerá aquí.</div>
+    </div>
+    <div id="toast" class="toast" role="status"></div>
+  </section>
+
+  <section class="stats">
+    <div class="panel stat"><strong id="totalCount">0</strong><span>Entradas registradas</span></div>
+    <div class="panel stat"><strong id="lastFolio">—</strong><span>Último folio registrado</span></div>
+  </section>
+
+  <section class="panel">
+    <h2 class="section-title">Acciones rápidas</h2>
+    <div class="actions">
+      <button id="undoBtn" class="secondary" type="button" disabled>↶ Deshacer último</button>
+      <button id="exportBtn" class="secondary" type="button">Descargar respaldo</button>
+      <button id="importBtn" class="secondary" type="button">Restaurar respaldo</button>
+      <input id="importFile" type="file" accept=".json,application/json" class="hidden">
+    </div>
+    <p class="notice" style="margin:12px 0 0">Los datos se guardan automáticamente en este navegador. El respaldo descargable es una protección adicional si cambias de dispositivo o borras los datos del navegador.</p>
+    <div id="backupMessage" class="toast" role="status"></div>
+  </section>
+
+  <section class="panel">
+    <h2 class="section-title">Últimas entradas</h2>
+    <div id="recentList" class="recent"><div class="muted">Todavía no hay folios registrados.</div></div>
+  </section>
+  <footer class="footer">Control de acceso · Flor Normalista 2026</footer>
+</main>
+<script>
+(() => {
+  "use strict";
+  const STORAGE_KEY = "flor_normalista_2026_access_v1";
+  const $ = id => document.getElementById(id);
+  const input = $("folioInput"), result = $("result"), toast = $("toast");
+  let records = [];
+  let currentCandidate = null;
+  let lastAction = null;
+
+  function loadRecords() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+      if (Array.isArray(parsed)) records = parsed.filter(r => r && typeof r.folio === "string" && typeof r.time === "string");
+    } catch (_) { records = []; }
+  }
+  function saveRecords() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+      return true;
+    } catch (_) {
+      alert("No se pudieron guardar los datos en este navegador. Descarga un respaldo y revisa el espacio disponible.");
+      return false;
+    }
+  }
+  function safeText(value) {
+    return String(value).replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
+  }
+  function formatTime(iso) {
+    const date = new Date(iso);
+    return Number.isNaN(date.getTime()) ? "" : date.toLocaleString("es-MX", {day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
+  }
+  function renderStats() {
+    $("totalCount").textContent = records.length;
+    $("lastFolio").textContent = records.length ? records[records.length - 1].folio : "—";
+    $("undoBtn").disabled = records.length === 0;
+    const recent = records.slice(-5).reverse();
+    $("recentList").innerHTML = recent.length ? recent.map(r =>
+      `<div class="recent-row"><div><strong>Folio ${safeText(r.folio)}</strong><div class="muted">${safeText(formatTime(r.time))}</div></div><span class="pill">Registrado</span></div>`
+    ).join("") : '<div class="muted">Todavía no hay folios registrados.</div>';
+  }
+  function showMessage(title, detail, cls = "") {
+    result.className = "result" + (cls ? " " + cls : "");
+    result.innerHTML = `<div class="status">${title}</div><div class="detail">${detail}</div>`;
+  }
+  function searchFolio(raw) {
+    const normalized = raw.trim().replace(/\s+/g, "");
+    if (!/^\d+$/.test(normalized)) {
+      currentCandidate = null;
+      showMessage("Escribe un folio válido", "Solo se permiten números.");
+      input.focus(); return;
+    }
+    const folio = normalized.replace(/^0+(?=\d)/, "");
+    const existing = records.find(r => r.folio === folio);
+    currentCandidate = null;
+    if (existing) {
+      result.className = "result used";
+      result.innerHTML = `<div class="number">${safeText(folio)}</div><div class="status">🔴 YA FUE REGISTRADO</div><div class="detail">Entrada registrada: ${safeText(formatTime(existing.time))}</div>`;
+    } else {
+      currentCandidate = folio;
+      result.className = "result available";
+      result.innerHTML = `<div class="detail">Folio revisado</div><div class="number">${safeText(folio)}</div><div class="status">🟢 DISPONIBLE</div><div class="detail">Confirma únicamente si el boleto corresponde a esta persona.</div><button id="confirmBtn" class="primary" type="button">Confirmar entrada</button>`;
+      $("confirmBtn").addEventListener("click", confirmEntry, {once:true});
+    }
+    toast.textContent = "";
+  }
+  function confirmEntry() {
+    if (currentCandidate === null) return;
+    const folio = currentCandidate;
+    if (records.some(r => r.folio === folio)) {
+      showMessage("🔴 YA FUE REGISTRADO", `El folio ${safeText(folio)} ya aparece en el control.`, "used");
+      currentCandidate = null; return;
+    }
+    const record = {folio, time:new Date().toISOString()};
+    records.push(record);
+    if (!saveRecords()) { records.pop(); return; }
+    lastAction = record;
+    currentCandidate = null;
+    renderStats();
+    showMessage("✓ ENTRADA REGISTRADA", `Folio ${safeText(folio)} · ${safeText(formatTime(record.time))}`, "available");
+    toast.textContent = "Registro guardado. Puedes ingresar el siguiente folio.";
+    input.value = "";
+    input.focus();
+  }
+  $("searchForm").addEventListener("submit", e => {
+    e.preventDefault(); searchFolio(input.value);
+  });
+  $("undoBtn").addEventListener("click", () => {
+    if (!records.length) return;
+    const last = records[records.length - 1];
+    if (!confirm(`¿Deshacer el último registro, folio ${last.folio}? El folio volverá a estar disponible.`)) return;
+    records.pop();
+    if (!saveRecords()) { records.push(last); return; }
+    lastAction = null; renderStats();
+    input.value = last.folio;
+    searchFolio(last.folio);
+    toast.textContent = `Se deshizo el registro del folio ${last.folio}.`;
+    input.focus();
+  });
+  $("exportBtn").addEventListener("click", () => {
+    const payload = {app:"Flor Normalista 2026 - Control de acceso", version:1, exportedAt:new Date().toISOString(), records};
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `respaldo_flor_normalista_${new Date().toISOString().slice(0,10)}.json`;
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    $("backupMessage").textContent = "Respaldo descargado. Guárdalo en un lugar seguro.";
+  });
+  $("importBtn").addEventListener("click", () => $("importFile").click());
+  $("importFile").addEventListener("change", async e => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    try {
+      const parsed = JSON.parse(await file.text());
+      const incoming = Array.isArray(parsed) ? parsed : parsed.records;
+      if (!Array.isArray(incoming) || !incoming.every(r => r && /^\d+$/.test(String(r.folio)) && typeof r.time === "string")) throw new Error("Formato inválido");
+      const cleaned = incoming.map(r => ({folio:String(r.folio).replace(/^0+(?=\d)/,""), time:r.time}));
+      const unique = new Map();
+      cleaned.forEach(r => { if (!unique.has(r.folio)) unique.set(r.folio, r); });
+      if (!confirm(`El respaldo contiene ${unique.size} folios. Reemplazará los registros actuales (${records.length}). ¿Continuar?`)) return;
+      const old = records; records = [...unique.values()];
+      if (!saveRecords()) { records = old; return; }
+      currentCandidate = null; renderStats();
+      showMessage("Respaldo restaurado", `${records.length} folios cargados correctamente.`);
+      $("backupMessage").textContent = "Restauración completada.";
+    } catch (_) {
+      $("backupMessage").textContent = "No se pudo leer ese archivo. Selecciona un respaldo JSON válido de esta app.";
+    } finally { e.target.value = ""; }
+  });
+  loadRecords(); renderStats(); input.focus();
+})();
+</script>
+</body>
+</html>
